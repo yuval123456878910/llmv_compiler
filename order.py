@@ -11,7 +11,7 @@ def ordered_line(tokened_line) -> list:
                 order_num += 100
             elif tokened_letter[1] == ")":
                 order_num -= 100
-            elif tokened_letter[1] == "{" or "}":
+            elif tokened_letter[1] in ["{" ,"}"]:
                 ordered_line_return.append([order_num+5,tokened_letter[0],tokened_letter[1]])
                 
         elif tokened_letter[0] == "keyword":

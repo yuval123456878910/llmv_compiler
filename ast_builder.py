@@ -10,6 +10,43 @@ class Node:
         self.expr = expr
         self.byteType = byteType
 
+class operator:
+    fourse = None
+    right = None
+    left = None
+    def __init__(self, opr):
+        self.operator = opr
+        self.byteType = "OPR"
+
+class keyword:
+    arg = None
+    name = ""
+    def __init__(self,keyword):
+        self.keyword = keyword
+        self.byteType = "KEYWORD"
+
+class integer:
+    def __init__(self,number):
+        self.number = number
+        self.byteType = "int32"
+
+class string:
+    def __init__(self,text):
+        self.text = text
+        self.byteType = "str"
+
+class BLOCK:
+    def __init__(self,lines_compiled):
+        self.expr = "BLOCK"
+        self.lines = lines_compiled
+        self.byteType = "BLOCK"
+
+class identifier:
+    def __init__(self,name, equals):
+        self.name = name
+        self.equals = equals
+        self.byteType = "IDEN"
+
 def nerest_end_sep(order_line,location,end):
     # fix ptoblom
     stop = 0
@@ -33,7 +70,7 @@ def nerest_end_sep(order_line,location,end):
     print("the sep did not end.")
     exit(1)
 
-def AST_builder(ordered_line: list) -> Node:
+def AST_builder(ordered_line: list):
     # lowest num finder
 
     if ordered_line == []:
@@ -62,7 +99,8 @@ def AST_builder(ordered_line: list) -> Node:
                 
         loc += 1
     if ordered_line[location_target][1] == "opr":
-        Node_main = Node(ordered_line[location_target][2],"OPR")
+        Node_main = operator(ordered_line[location_target][2])
+        
         if ordered_line[location_target][2] == "=":
             Node_main.fourse = "SETV" # set values
         elif ordered_line[location_target][2] == "+":
@@ -86,9 +124,9 @@ def AST_builder(ordered_line: list) -> Node:
                 print("no element behind")
                 exit(1)
 
-            Node_main.term = ordered_line[location_target-1][2]
-            Node_main.value_term = AST_builder(ordered_line[location_target+1:current_EOL+1])
-            Node_main.left = AST_builder(ordered_line[location_target+1:current_EOL+1])
+            Node_main = identifier(ordered_line[location_target-1][2], AST_builder(ordered_line[location_target+1:current_EOL+1]))
+
+         
         
         else:
             Node_main.right = AST_builder(ordered_line[location_target:current_EOL])
@@ -96,15 +134,16 @@ def AST_builder(ordered_line: list) -> Node:
             if Node_main.right == Node(None,""):
                 print("NO astrebute aveible")
                 exit(1)
-            elif Node_main.right == Node(None,""):
+            elif Node_main.left == Node(None,""):
                 print("NO astrebute aveible")
                 exit(1)
 
     elif ordered_line[location_target][1] == "keyword":
-        Node_main = Node(ordered_line[location_target][2],"KEYWORD")
+        Node_main = keyword(ordered_line[location_target][2])
         if ordered_line[location_target][2] == "func":
             location, start_loc = nerest_end_sep(ordered_line,location_target,current_EOL)
-            Node_main.term = AST_builder(ordered_line[location+1:start_loc+1])
+            Node_main.arg = AST_builder(ordered_line[location+1:start_loc+1])
+            Node_main.name = "func"
             return Node_main
         
     elif ordered_line[location_target][1] == "sep":
@@ -124,14 +163,13 @@ def AST_builder(ordered_line: list) -> Node:
                 print("BLOCK did not end. the BLOCK start at",location_target)
                 exit(1)
 
-            Node_main = Node("BLOCK","BLOCK")
-            Node_main.value_term = AST_builder(ordered_line[location_target+1:location_end])
+            Node_main = BLOCK(AST_builder(ordered_line[location_target+1:location_end]))
             return Node_main
 
 
     elif ordered_line[location_target][1] == "int":
-        Node_main = Node(ordered_line[location_target][2],"int32")
+        Node_main = integer(ordered_line[location_target][2])
     
     elif ordered_line[location_target][1] == "str":
-        Node_main = Node(ordered_line[location_target][2],"str")
+        Node_main = string(ordered_line[location_target][2])
     return Node_main
