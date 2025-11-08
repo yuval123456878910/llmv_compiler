@@ -62,7 +62,6 @@ def tokenizer(line: str,keyword) -> list:
             word = ""
             current_type = "sep"
             token_line.append([current_type,digit])
-            
             loc += 1
             continue
 

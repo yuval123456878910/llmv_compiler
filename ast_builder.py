@@ -33,6 +33,16 @@ class keyword:
         self.keyword = keyword
         self.byteType = "KEYWORD"
 
+class function:
+    block = []
+    args = None
+    
+    def __init__(self,name,return_type):
+        self.name = name
+        self.type = return_type
+        self.byteType = "FUNC"
+
+
 class integer:
     def __init__(self,number):
         self.number = number
@@ -55,9 +65,10 @@ class BLOCK:
         self.byteType = "BLOCK"
 
 class identifier:
-    def __init__(self,name, equals):
+    def __init__(self,name, equals, type):
         self.name = name
         self.equals = equals
+        self.type = type
         self.byteType = "IDEN"
 
 def nerest_end_sep(order_line,location,end):
@@ -95,10 +106,12 @@ def closed_last_loc(order_line, start: int, letter=None, func= lambda x: x[0]) -
 def all_letter_location(order_line, start = 0, letter=None, func= lambda x: x[0],end = -1 ) -> list[int]:
     locations = []
     at_location = start
+    
     for _ in order_line[start:end]:
         if func(order_line[at_location]) == letter:
             locations.append(at_location)
         at_location += 1
+    
     return locations
 
 def AST_builder(ordered_line: list):
@@ -108,20 +121,15 @@ def AST_builder(ordered_line: list):
         return None
 
     current_EOL = 0
-    loc = 0
+    loc1 = 0
     Node_main = None
 
-    for tok in ordered_line:
-        if tok[1] == "EOL":
-            current_EOL = loc
-            break
-        loc += 1    
-    del loc
-
+    
     
     location_target = 0
     loc = 0
     lowest_target = 200
+    
     for ord_token in ordered_line:
         if ord_token[0] != None:
             if lowest_target > ord_token[0]:
@@ -129,6 +137,15 @@ def AST_builder(ordered_line: list):
                 location_target = loc
                 
         loc += 1
+    for tok in ordered_line:
+        if tok[1] == "EOL":
+            if ordered_line[location_target][0] != None and ordered_line[location_target][1] != "EOL":
+                if tok[3] - tok[3] % 100 >= ordered_line[location_target][0] - ordered_line[location_target][0] % 100:
+                    current_EOL = loc1
+                    break
+        loc1 += 1   
+    
+    
     if ordered_line[location_target][1] == "opr":
         Node_main = operator(ordered_line[location_target][2])
         
@@ -148,14 +165,26 @@ def AST_builder(ordered_line: list):
         if Node_main.fourse == "SETV":
             
             if location_target <= 0:
-                print("no element behind")
+                print("No element behind")
                 exit(1)
 
             elif ordered_line[location_target-1][1] != "elm":
-                print("no element behind")
+                print("No element behind")
                 exit(1)
-
-            Node_main = identifier(ordered_line[location_target-1][2], AST_builder(ordered_line[location_target+1:current_EOL+1]))
+            elif ordered_line[location_target-2][1] != "keyword":
+                print("No type specevide")
+                exit(1)
+            elif ordered_line[location_target-2][2] not in ["str","int","float"]:
+                print("Keyword not exact")
+                exit(1)
+            type_asset = ""
+            if ordered_line[location_target-2][2] == "str":
+                type_asset = "str"
+            elif ordered_line[location_target-2][2] == "int":
+                type_asset = "int32"
+            elif ordered_line[location_target-2][2] == "int":
+                type_asset = "float32"
+            Node_main = identifier(ordered_line[location_target-1][2], AST_builder(ordered_line[location_target+1:current_EOL+1]),type_asset)
 
          
         
@@ -172,9 +201,12 @@ def AST_builder(ordered_line: list):
     elif ordered_line[location_target][1] == "keyword":
         Node_main = keyword(ordered_line[location_target][2])
         if ordered_line[location_target][2] == "func":
+            Node_main = function(ordered_line[location_target+1][2],ordered_line[location_target+2][2])
             location, start_loc = nerest_end_sep(ordered_line,location_target,current_EOL)
-            Node_main.arg = AST_builder(ordered_line[location+1:start_loc+1])
-            Node_main.name = "func"
+            if location+1 != start_loc:
+                Node_main.arg = AST_builder(ordered_line[location+1:start_loc+1])
+            Node_main.block = combiner(ordered_line[location_target+3:len(ordered_line)])[0]
+            
             return Node_main
         
     elif ordered_line[location_target][1] == "sep":
@@ -193,8 +225,7 @@ def AST_builder(ordered_line: list):
             if current_piese > 0:
                 print("BLOCK did not end. the BLOCK start at",location_target)
                 exit(1)
-
-            Node_main = BLOCK(AST_builder(ordered_line[location_target+1:location_end]))
+            Node_main = BLOCK(combiner(ordered_line[location_target+1:location_end])[0])
             return Node_main
 
         elif ordered_line[location_target][2] == ",":
@@ -220,3 +251,29 @@ def AST_builder(ordered_line: list):
     elif ordered_line[location_target][1] == "str":
         Node_main = string(ordered_line[location_target][2])
     return Node_main
+
+def combiner(order_line: list):
+    all_eol_locations = []
+    loc1 = 0
+    first_letter = order_line[0]
+    for tok in order_line: 
+        if tok[0] != None:
+            first_letter = tok
+            break
+
+    for or_l in order_line:
+        #print(first_letter[0],or_l)
+        if (or_l[0] == None) and (or_l[1] == 'EOL') and (first_letter[0] - first_letter[0] % 100) == (or_l[3] - or_l[3] % 100) and (or_l[2] == ''):
+            all_eol_locations.append(loc1)
+        loc1 += 1
+
+    last_eol_location = 0
+    list_eols = []
+    
+    
+
+    for loc in all_eol_locations:
+        if order_line[loc][3] - order_line[loc][3] % 100 == first_letter[0] - first_letter[0] % 100: 
+            list_eols.append(AST_builder(order_line[last_eol_location:loc+1]))
+        last_eol_location = loc
+    return list_eols
