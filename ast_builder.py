@@ -137,6 +137,7 @@ def AST_builder(ordered_line: list):
                 location_target = loc
                 
         loc += 1
+
     for tok in ordered_line:
         if tok[1] == "EOL":
             if ordered_line[location_target][0] != None and ordered_line[location_target][1] != "EOL":
@@ -189,7 +190,7 @@ def AST_builder(ordered_line: list):
          
         
         else:
-            Node_main.right = AST_builder(ordered_line[location_target:current_EOL])
+            Node_main.right = AST_builder(ordered_line[location_target+1:current_EOL+1])
             Node_main.left = AST_builder(ordered_line[:location_target])
             if Node_main.right == Node(None,""):
                 print("NO astrebute aveible")
@@ -206,7 +207,10 @@ def AST_builder(ordered_line: list):
             if location+1 != start_loc:
                 Node_main.arg = AST_builder(ordered_line[location+1:start_loc+1])
             Node_main.block = combiner(ordered_line[location_target+3:len(ordered_line)])[0]
-            
+            return Node_main
+        
+        if ordered_line[location_target][2] == "int":
+            Node_main = identifier(ordered_line[location_target+1][2],AST_builder(ordered_line[location_target+3:current_EOL+1]),"int32")
             return Node_main
         
     elif ordered_line[location_target][1] == "sep":
@@ -225,7 +229,7 @@ def AST_builder(ordered_line: list):
             if current_piese > 0:
                 print("BLOCK did not end. the BLOCK start at",location_target)
                 exit(1)
-            Node_main = BLOCK(combiner(ordered_line[location_target+1:location_end])[0])
+            Node_main = BLOCK(combiner(ordered_line[location_target+1:location_end]))
             return Node_main
 
         elif ordered_line[location_target][2] == ",":
@@ -274,6 +278,9 @@ def combiner(order_line: list):
 
     for loc in all_eol_locations:
         if order_line[loc][3] - order_line[loc][3] % 100 == first_letter[0] - first_letter[0] % 100: 
-            list_eols.append(AST_builder(order_line[last_eol_location:loc+1]))
+            if order_line[last_eol_location][0] == None and order_line[last_eol_location][1] == 'EOL':
+                list_eols.append(AST_builder(order_line[last_eol_location+1:loc+1]))
+            else:
+                list_eols.append(AST_builder(order_line[last_eol_location:loc+1]))
         last_eol_location = loc
     return list_eols

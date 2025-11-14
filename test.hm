@@ -1,0 +1,3 @@
+func main int() {
+    int e = 5+1;
+};

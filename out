@@ -1,0 +1,11 @@
+; ModuleID = "MAIN"
+target triple = "unknown-unknown-unknown"
+target datalayout = ""
+
+define i32 @"main"()
+{
+entry:
+  %"2Cal" = add i32 5, 1
+  %"e" = alloca i32
+  store i32 %"2Cal" = add i32 5, 1, i32* %"e"
+}
