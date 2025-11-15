@@ -88,7 +88,11 @@ def compiling_to_IR(ASTs, block= ir.Block, Module = ir.Module, building = ir.IRB
                 ptr = building.alloca(typ=ir.DoubleType(),name=key.name)
                 verubles[key.name] = ptr
                 building.store(eqr,ptr=ptr)
-            
+
+        elif key.byteType == "CHAN":
+            eqr = compiling_to_IR([key.equals],block,Module=Module,building=building)
+            building.store(eqr,verubles[key.name])
+
         elif key.byteType == "int32":
             verubles[f"{total_veubles_complitions}Cal"] = ir.IntType(32)(key.number)
             old = f"{total_veubles_complitions}Cal"

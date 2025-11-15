@@ -9,11 +9,13 @@ import os
 file = open(sys.argv[1],"r")
 output_name = sys.argv[2]
 exe_name = sys.argv[3]
+text = "int a= 4; a = 5;"
 keywords = ["int", "str", "float","func","return"]
 token = tokenizer(file.read(),keywords)
 ord_line = ordered_line(token)
 AST = combiner(ord_line) # the ast
-Modle = ir.Module(file)
+print(AST)
+Modle = ir.Module(sys.argv[1])
 compiling_to_IR(AST,Module=Modle)
 output = open(output_name,"w")
 output.write(str(Modle))
